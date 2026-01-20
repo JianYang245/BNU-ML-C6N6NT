@@ -1,0 +1,41 @@
+from sklearn.ensemble import RandomForestRegressor
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn import metrics
+import matplotlib.pyplot as plt
+from math import sqrt
+
+np.random.seed(2)
+random_indices = np.random.choice(x.index, size=3, replace=False)
+x_final = x.loc[random_indices]
+y_final = y.loc[random_indices]
+
+x_remaining = x.drop(random_indices)
+y_remaining = y.drop(random_indices)
+x_train, x_test, y_train, y_test = train_test_split(
+    x_remaining, y_remaining, 
+    test_size=0.20,
+    random_state=6
+)
+model=RandomForestRegressor(max_depth=11,n_estimators=210)
+model.fit(x_train, y_train)
+y_train_pred = model.predict(x_train)
+y_test_pred = model.predict(x_test)
+
+def get_metrics(y_true, y_pred):
+    return {
+        'R2': metrics.r2_score(y_true, y_pred),
+        'MSE': metrics.mean_squared_error(y_true, y_pred),
+        'MAE': metrics.mean_absolute_error(y_true, y_pred),
+        'RMSE': sqrt(metrics.mean_squared_error(y_true, y_pred))
+    }
+
+test_metrics = get_metrics(y_test, y_test_pred)
+train_metrics = get_metrics(y_train, y_train_pred)
+metric_types = ['MSE', 'MAE', 'R2', 'RMSE']
+for m in metric_types:
+    print(f"{m}: Test={test_metrics[m]:.3f}, Train={train_metrics[m]:.3f}")
+final_pred = model.predict(x_final)
+print("\nFinal Predictions vs True Values:")
+print(pd.DataFrame({'True': y_final, 'Predicted': final_pred}).round(3))
